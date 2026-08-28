@@ -1,8 +1,8 @@
 from odoo import Command, fields
-from odoo.tests.common import TransactionCase
+from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
 
-class TestActualizacionImpuestoFacturaPosteada(TransactionCase):
+class TestActualizacionImpuestoFacturaPosteada(AccountTestInvoicingCommon):
     """Test para validar actualización de impuestos en facturas posteadas.
 
     Este test está diseñado como un control de calidad y DEBE PASAR si el bug persiste (valor = 0.00).
@@ -13,7 +13,7 @@ class TestActualizacionImpuestoFacturaPosteada(TransactionCase):
         super().setUp()
 
         # Configurar compañía
-        self.company = self.env.ref("base.main_company")
+        self.company = self.company_data["company"]
         self.country = self.env.ref("base.us")
 
         # Odoo 19 exige un grupo fiscal. Se crea uno propio para no depender
@@ -40,18 +40,13 @@ class TestActualizacionImpuestoFacturaPosteada(TransactionCase):
         )
 
         # Obtener cuenta de gastos de la compañía
-        self.cuenta_gastos = self.env["account.account"].search(
-            [("account_type", "=", "expense"), ("company_ids", "in", self.company.id)],
-            limit=1,
-        )
+        self.cuenta_gastos = self.company_data["default_account_expense"]
 
         # Obtener proveedor de prueba
-        self.proveedor = self.env.ref("base.res_partner_12")
+        self.proveedor = self.partner_a
 
         # Obtener diario de compras de la compañía
-        self.diario_compras = self.env["account.journal"].search(
-            [("type", "=", "purchase"), ("company_id", "=", self.company.id)], limit=1
-        )
+        self.diario_compras = self.company_data["default_journal_purchase"]
 
         # Fecha de hoy para la factura
         self.today = fields.Date.today()
