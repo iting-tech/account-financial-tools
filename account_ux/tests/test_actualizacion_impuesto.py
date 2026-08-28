@@ -45,8 +45,16 @@ class TestActualizacionImpuestoFacturaPosteada(AccountTestInvoicingCommon):
         # Obtener proveedor de prueba
         self.proveedor = self.partner_a
 
-        # Obtener diario de compras de la compañía
-        self.diario_compras = self.company_data["default_journal_purchase"]
+        # Use an isolated purchase journal.  Development builds may run this
+        # test before demo journals are available for the test company.
+        self.diario_compras = self.env["account.journal"].create(
+            {
+                "name": "Diario Compras Test Impuesto Fijo",
+                "code": "TFIX",
+                "type": "purchase",
+                "company_id": self.company.id,
+            }
+        )
 
         # Fecha de hoy para la factura
         self.today = fields.Date.today()
