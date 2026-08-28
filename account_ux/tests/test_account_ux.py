@@ -1,19 +1,20 @@
-import odoo.tests.common as common
 from odoo import Command, fields
+from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
 
-class TestAccountUXChangeCurrency(common.TransactionCase):
+class TestAccountUXChangeCurrency(AccountTestInvoicingCommon):
     def setUp(self):
         super().setUp()
         self.today = fields.Date.today()
-        self.company_usd = self.env.ref("base.main_company")
-        self.partner = self.env.ref("base.res_partner_12")
+        self.company_usd = self.company_data["company"]
+        self.partner = self.partner_a
+        self.product = self.product_a
 
         self.currency_usd = self.env.ref("base.USD")
         self.currency_ars = self.env.ref("base.ARS")
         self.currency_ars.write({"active": True})
 
-        self.journal_usd = self.env.ref("account.1_sale")
+        self.journal_usd = self.company_data["default_journal_sale"]
 
         self.journal_ars = self.journal_usd.copy()
 
@@ -30,7 +31,7 @@ class TestAccountUXChangeCurrency(common.TransactionCase):
                 "invoice_line_ids": [
                     Command.create(
                         {
-                            "product_id": self.env.ref("product.product_product_16").id,
+                            "product_id": self.product.id,
                             "quantity": 1,
                             "price_unit": 1000,
                         }
@@ -84,7 +85,7 @@ class TestAccountUXChangeCurrency(common.TransactionCase):
                 "invoice_line_ids": [
                     Command.create(
                         {
-                            "product_id": self.env.ref("product.product_product_16").id,
+                            "product_id": self.product.id,
                             "quantity": 1,
                             "price_unit": 1000,
                         }
