@@ -15,6 +15,15 @@ class TestActualizacionImpuestoFacturaPosteada(TransactionCase):
         # Configurar compañía
         self.company = self.env.ref("base.main_company")
 
+        # Odoo 19 exige un grupo fiscal. Se crea uno propio para no depender
+        # de datos demo de una localizacion.
+        self.tax_group = self.env["account.tax.group"].create(
+            {
+                "name": "Grupo Impuesto Fijo Test",
+                "company_id": self.company.id,
+            }
+        )
+
         # Crear impuesto fijo de $1.00
         self.impuesto_fijo_test = self.env["account.tax"].create(
             {
@@ -23,6 +32,7 @@ class TestActualizacionImpuestoFacturaPosteada(TransactionCase):
                 "amount": 1.00,
                 "type_tax_use": "purchase",
                 "company_id": self.company.id,
+                "tax_group_id": self.tax_group.id,
             }
         )
 
