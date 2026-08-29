@@ -26,6 +26,32 @@ class TestActualizacionImpuestoFacturaPosteada(AccountTestInvoicingCommon):
             }
         )
 
+        self.cuenta_gastos = self.env["account.account"].create(
+            {
+                "name": "Gastos Test Impuesto Fijo",
+                "code": "TFEXP",
+                "account_type": "expense",
+                "company_ids": [Command.set([self.company.id])],
+            }
+        )
+        self.cuenta_impuesto = self.env["account.account"].create(
+            {
+                "name": "Credito Fiscal Test Impuesto Fijo",
+                "code": "TFTAX",
+                "account_type": "asset_current",
+                "company_ids": [Command.set([self.company.id])],
+            }
+        )
+        self.cuenta_pagar = self.env["account.account"].create(
+            {
+                "name": "Proveedores Test Impuesto Fijo",
+                "code": "TFPAY",
+                "account_type": "liability_payable",
+                "reconcile": True,
+                "company_ids": [Command.set([self.company.id])],
+            }
+        )
+
         # Crear impuesto fijo de $1.00
         self.impuesto_fijo_test = self.env["account.tax"].create(
             {
@@ -36,14 +62,36 @@ class TestActualizacionImpuestoFacturaPosteada(AccountTestInvoicingCommon):
                 "company_id": self.company.id,
                 "country_id": self.country.id,
                 "tax_group_id": self.tax_group.id,
+                "invoice_repartition_line_ids": [
+                    Command.create(
+                        {"factor_percent": 100.0, "repartition_type": "base"}
+                    ),
+                    Command.create(
+                        {
+                            "factor_percent": 100.0,
+                            "repartition_type": "tax",
+                            "account_id": self.cuenta_impuesto.id,
+                        }
+                    ),
+                ],
+                "refund_repartition_line_ids": [
+                    Command.create(
+                        {"factor_percent": 100.0, "repartition_type": "base"}
+                    ),
+                    Command.create(
+                        {
+                            "factor_percent": 100.0,
+                            "repartition_type": "tax",
+                            "account_id": self.cuenta_impuesto.id,
+                        }
+                    ),
+                ],
             }
         )
 
-        # Obtener cuenta de gastos de la compañía
-        self.cuenta_gastos = self.company_data["default_account_expense"]
-
         # Obtener proveedor de prueba
-        self.proveedor = self.partner_a
+        self.proveedor = self.partner_a.with_company(self.company)
+        self.proveedor.property_account_payable_id = self.cuenta_pagar
 
         # Use an isolated purchase journal.  Development builds may run this
         # test before demo journals are available for the test company.
