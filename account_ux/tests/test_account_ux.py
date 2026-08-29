@@ -7,18 +7,56 @@ class TestAccountUXChangeCurrency(AccountTestInvoicingCommon):
         super().setUp()
         self.today = fields.Date.today()
         self.company_usd = self.company_data["company"]
-        self.partner = self.partner_a
-        self.product = self.product_a
 
         self.currency_usd = self.env.ref("base.USD")
         self.currency_ars = self.env.ref("base.ARS")
         self.currency_ars.write({"active": True})
+        self.company_usd.currency_id = self.currency_usd
 
-        self.journal_usd = self.company_data["default_journal_sale"]
-
-        self.journal_ars = self.journal_usd.copy()
-
-        self.journal_ars.write({"currency_id": self.currency_ars})
+        self.account_income = self.env["account.account"].create(
+            {
+                "name": "Income Currency Test",
+                "code": "TCINC",
+                "account_type": "income",
+                "company_ids": [Command.set([self.company_usd.id])],
+            }
+        )
+        self.account_receivable = self.env["account.account"].create(
+            {
+                "name": "Receivable Currency Test",
+                "code": "TCREC",
+                "account_type": "asset_receivable",
+                "reconcile": True,
+                "company_ids": [Command.set([self.company_usd.id])],
+            }
+        )
+        self.partner = self.env["res.partner"].create(
+            {"name": "Currency Test Customer"}
+        ).with_company(self.company_usd)
+        self.partner.property_account_receivable_id = self.account_receivable
+        self.product = self.env["product.product"].create(
+            {
+                "name": "Currency Test Product",
+                "property_account_income_id": self.account_income.id,
+            }
+        )
+        self.journal_usd = self.env["account.journal"].create(
+            {
+                "name": "USD Currency Test Sales",
+                "code": "TCUS",
+                "type": "sale",
+                "company_id": self.company_usd.id,
+            }
+        )
+        self.journal_ars = self.env["account.journal"].create(
+            {
+                "name": "ARS Currency Test Sales",
+                "code": "TCAR",
+                "type": "sale",
+                "company_id": self.company_usd.id,
+                "currency_id": self.currency_ars.id,
+            }
+        )
 
     def test_account_ux_change_currency(self):
         invoice = self.env["account.move"].create(
